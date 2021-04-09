@@ -1,4 +1,1 @@
 .vscode
-.devcontainer
-docker-compose.yaml
-Dockerfile

@@ -1,0 +1,26 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the README at:
+// https://github.com/microsoft/vscode-dev-containers/tree/v0.163.1/containers/docker-existing-dockerfile
+{
+	"name": "jaeger_test",
+	"service": "jaeger_test",
+	// Sets the run context to one level up instead of the .devcontainer folder.
+	"workspaceFolder": "/workspace",
+	// Update the 'dockerFile' property if you aren't using the standard 'Dockerfile' filename.
+	"dockerComposeFile": [
+		"../docker-compose.yaml"
+	],
+	// Set *default* container specific settings.json values on container create.
+	"settings": { 
+		"terminal.integrated.shell.linux": null
+	},
+	"forwardPorts": [
+		8080,
+		16686,
+		6379,
+		29090
+	],
+	// Add the IDs of extensions you want installed when the container is created.
+	"extensions": [
+		"golang.go"
+	]
+}

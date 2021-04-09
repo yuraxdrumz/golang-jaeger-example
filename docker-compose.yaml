@@ -1,0 +1,23 @@
+version: '3.7'
+services:
+  redis:
+    image: redis
+    ports:
+      - "6379:6379"
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    ports:
+      - "6831:6831/udp"
+      - "16686:16686"
+  jaeger_test:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/workspace:cached
+    command: /bin/sh -c "while sleep 1000; do :; done"
+    links:
+      - jaeger
+      - redis
