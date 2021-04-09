@@ -1,4 +1,4 @@
-module test_data_injector
+module golang_jaeger_example
 
 go 1.16
 
