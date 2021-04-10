@@ -15,7 +15,9 @@ Due to a lack of examples on how to connect redis, gorm and gin together and add
 
 3. Open Jaeger UI at <http://localhost:16686>
 
-4. See a single trace with 2 spans under it, one for Gin and one for Redis
+4. See a single trace with 3 spans under it, one for Gin, one for Redis and one for Gorm
+
+5. cURL response will have X-Trace-Id as response header, with which you can query in Jaeger UI
 
 ## Step By Step Code Guide
 
