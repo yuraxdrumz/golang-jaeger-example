@@ -3,11 +3,13 @@ package main
 import (
 	"log"
 
-	ginopentracing "github.com/Bose/go-gin-opentracing"
 	"github.com/gin-gonic/gin"
 	redisopentracing "github.com/globocom/go-redis-opentracing"
 	"github.com/go-redis/redis/v8"
+	"github.com/jinzhu/gorm"
+	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	"github.com/opentracing/opentracing-go"
+	otgorm "github.com/smacker/opentracing-gorm"
 	"github.com/uber/jaeger-client-go"
 	jaegercfg "github.com/uber/jaeger-client-go/config"
 	jaegerlog "github.com/uber/jaeger-client-go/log"
@@ -17,6 +19,12 @@ import (
 // jaeger examples - https://opentracing.io/guides/golang/quick-start/
 // jaeger redis - https://pkg.go.dev/github.com/globocom/go-redis-opentracing#readme-installation
 // trace id - https://github.com/opentracing/opentracing-go/issues/188
+// example of ibm for tracing - https://cloud.ibm.com/docs/go?topic=go-go-e2e-tracing
+
+type User struct {
+	gorm.Model
+	Name string
+}
 
 func main() {
 	// Recommended configuration for production.
@@ -57,31 +65,26 @@ func main() {
 		Password: "", // no password set
 		DB:       0,  // use default DB
     })
-	
+
+    db, err := gorm.Open("sqlite3", ":memory:")
+    if err != nil {
+        panic(err)
+    }
+	db.CreateTable(&User{})
+    // register callbacks must be called for a root instance of your gorm.DB
+    otgorm.AddGormCallbacks(db)
+
 	tracer := opentracing.GlobalTracer()
 	hook := redisopentracing.NewHook(tracer)
 	rdb.AddHook(hook)
 	// create the middleware
-	p := ginopentracing.OpenTracer([]byte("api-request-"))
 	r := gin.Default()
 	// tell gin to use the middleware
-	r.Use(p)
+	r.Use(OpenTracing())
 	r.GET("/", func(c *gin.Context) {
-		var span opentracing.Span
-		if cspan, ok := c.Get("tracing-context"); ok {
-			span = ginopentracing.StartSpanWithParent(cspan.(opentracing.Span).Context(), "helloword", c.Request.Method, c.Request.URL.Path)	
-		} else {
-			span = ginopentracing.StartSpanWithHeader(&c.Request.Header, "helloworld", c.Request.Method, c.Request.URL.Path)
-		}
-
-		ctx := opentracing.ContextWithSpan(c.Request.Context(), span)
-		_, _ = rdb.Set(ctx, "test", 1, 0).Result()
-		
-
-		if sc, ok := span.Context().(jaeger.SpanContext); ok {
-			traceId := sc.TraceID()
-			c.Header("X-Trace-Id", traceId.String())
-		}
+		_, _ = rdb.Set(c.Request.Context(), "test", 1, 0).Result()
+   		db := otgorm.SetSpanToGorm(c.Request.Context(), db)
+		db.Create(&User{Name: "michael"})
 		c.JSON(200, "Hello world!")
 	})
 
