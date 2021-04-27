@@ -24,5 +24,10 @@ func OpenTracing() gin.HandlerFunc {
 	}
     
 	c.Next()
+
+	if c.Writer.Status() > 299 {
+		ext.Error.Set(serverSpan, true)
+	}
+
  }
 }
