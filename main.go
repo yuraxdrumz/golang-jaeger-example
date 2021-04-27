@@ -27,17 +27,25 @@ type User struct {
 }
 
 func main() {
-	// Recommended configuration for production.
     cfg := jaegercfg.Configuration{
-        ServiceName: "jaegertest",
+        ServiceName: "applications-service",
         Sampler:     &jaegercfg.SamplerConfig{
-            Type:  jaeger.SamplerTypeConst,
+            Type:  jaeger.SamplerTypeRateLimiting,
             Param: 1,
         },
         Reporter:    &jaegercfg.ReporterConfig{
+			User: "",
+			Password: "",
             LogSpans: true,
 			LocalAgentHostPort: "jaeger:6831",
+			QueueSize: 100,
         },
+		Tags: []opentracing.Tag{
+			{
+				Key: "svc",
+				Value: "applications-service",
+			},
+		},
     }
 
 
@@ -49,7 +57,7 @@ func main() {
 
 	// Initialize tracer with a logger and a metrics factory
 	closer, err := cfg.InitGlobalTracer(
-		"serviceName",
+		"",
 		jaegercfg.Logger(jLogger),
 		jaegercfg.Metrics(jMetricsFactory),
 	)
@@ -89,5 +97,4 @@ func main() {
 	})
 
 	r.Run(":29090")
-
 }
